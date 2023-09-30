@@ -1,10 +1,10 @@
 {
-    "bonito": 1,
-    "bonito_diff": 1,
+    "bonito": 0,
+    "bonito_diff": -1,
     "rosemary": 71,
     "rosemary_diff": 0,
     "sargo": 2,
-    "sargo_diff": 2,
+    "sargo_diff": 0,
     "sunfish": 8,
     "sunfish_diff": 0,
     "taimen": 28,

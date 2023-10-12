@@ -1,12 +1,12 @@
 {
-    "bonito": 9,
-    "bonito_diff": 0,
-    "rosemary": 146,
-    "rosemary_diff": 0,
+    "bonito": 10,
+    "bonito_diff": 1,
+    "rosemary": 159,
+    "rosemary_diff": 13,
     "sargo": 13,
     "sargo_diff": 0,
     "sunfish": 16,
-    "sunfish_diff": 1,
-    "taimen": 32,
-    "taimen_diff": 3
+    "sunfish_diff": 0,
+    "taimen": 33,
+    "taimen_diff": 1
 }

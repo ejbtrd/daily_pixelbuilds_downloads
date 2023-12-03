@@ -30,7 +30,7 @@ async def main():
     with open("downloads.json", "r") as f:
         downloads = json.load(f)
 
-    devices_url = "https://raw.githubusercontent.com/PixelBuildsROM/android_pixelbuilds/main/devices.json"
+    devices_url = "https://raw.githubusercontent.com/PixelBuildsROM/pixelbuilds_devices/main/devices.json"
 
     response = requests.get(devices_url).json()
 
@@ -44,12 +44,14 @@ async def main():
 
         print(f"Processing {manufacturer}/{codename}...")
 
-        url = f"https://api.github.com/repos/PixelBuilds-Releases/android_device_{manufacturer}_{codename}/releases"
+        url = f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
         deviceresponse = requests.get(url)
 
         if deviceresponse.status_code == 404:
             manufacturer = "redmi"
-            url = f"https://api.github.com/repos/PixelBuilds-Releases/android_device_{manufacturer}_{codename}/releases"
+            url = (
+                f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
+            )
             deviceresponse = requests.get(url)
 
         if deviceresponse.status_code != 200:

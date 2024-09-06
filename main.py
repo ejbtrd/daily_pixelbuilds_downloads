@@ -127,9 +127,10 @@ async def main():
         f.write(json.dumps(downloads, indent=4, sort_keys=True))
 
     # Send telegram message with results
-    bot = telegram.Bot(TG_BOT_TOKEN)
-    async with bot:
-        await bot.send_message(text=message, chat_id=TG_CHAT_ID)
+    if TG_BOT_TOKEN and TG_CHAT_ID:
+        bot = telegram.Bot(TG_BOT_TOKEN)
+        async with bot:
+            await bot.send_message(text=message, chat_id=TG_CHAT_ID)
 
     downloads["_date"] = date
 

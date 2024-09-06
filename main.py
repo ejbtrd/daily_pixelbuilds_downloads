@@ -120,6 +120,11 @@ async def main():
     if totalDiff != 0:
         message += f" (+{totalDiff})" if totalDiff > 0 else f" ({totalDiff})"
 
+    downloads["_date"] = date
+
+    downloads["_total"] = totalDownloads
+    downloads["_total_diff"] = totalDiff
+    
     print(message)
 
     # Write to JSON
@@ -131,11 +136,6 @@ async def main():
         bot = telegram.Bot(TG_BOT_TOKEN)
         async with bot:
             await bot.send_message(text=message, chat_id=TG_CHAT_ID)
-
-    downloads["_date"] = date
-
-    downloads["_total"] = totalDownloads
-    downloads["_total_diff"] = totalDiff
 
 
 if __name__ == "__main__":

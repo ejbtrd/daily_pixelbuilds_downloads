@@ -21,7 +21,7 @@ async def main():
     TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
     TG_CHAT_ID = os.environ.get("TG_CHAT_ID")
 
-    date = str(datetime.now().replace(second=0, microsecond=0))
+    date = datetime.now()
 
     totalDownloads = totalPrevious = diff = 0
 
@@ -60,45 +60,63 @@ async def main():
                 f"Github responded: {deviceresponse_github.status_code}: {deviceresponse_github.text}"
                 f"Gitea responded: {deviceresponse_gitea.status_code}: {deviceresponse_gitea.text}"
             )
-            skippeddevices.append(codename)
+            skippeddevices.append(f"{codename} - no data from both GitHub and Gitea")
             continue
 
         if deviceresponse_github.status_code == 200:
             if len(deviceresponse_github.json()) == 0:
-                skippeddevices.append(f"{codename} - no releases on GitHub")
-                continue
+                print(f"No releases on GitHub for {codename}")
+                skippeddevices.append(f"{codename} (GitHub) - no releases")
+            else:
+                print("Counting downloads from GitHub")
 
-            for release in deviceresponse_github.json():
-                for asset in release["assets"]:
-                    if not asset["name"].startswith("PixelBuilds_") and not asset[
-                        "name"
-                    ].endswith(".zip"):
-                        continue
+                for release in deviceresponse_github.json():
+                    for asset in release["assets"]:
+                        if not asset["name"].startswith("PixelBuilds_") and not asset[
+                            "name"
+                        ].endswith(".zip"):
+                            continue
 
-                    print(f"  adding {asset['download_count']} from GitHub")
-                    deviceDownloads += asset["download_count"]
+                        print(f"\tadding {asset['download_count']} from GitHub")
+                        deviceDownloads += asset["download_count"]
+        else:
+            print(f"Failed to get data from GitHub for {codename}!")
+            print(
+                f"Response: {deviceresponse_github.status_code}: {deviceresponse_github.text}"
+            )
+            skippeddevices.append(f"{codename} (GitHub) - no data")
 
         if deviceresponse_gitea.status_code == 200:
             if len(deviceresponse_gitea.json()) == 0:
-                skippeddevices.append(f"{codename} - no releases on Gitea")
-                continue
+                print(f"No releases on Gitea for {codename}")
+                skippeddevices.append(f"{codename} (Gitea) - no releases")
+            else:
+                print("Counting downloads from Gitea")
 
-            for release in deviceresponse_gitea.json():
-                for asset in release["assets"]:
-                    if not asset["name"].startswith("PixelBuilds_") and not asset[
-                        "name"
-                    ].endswith(".zip"):
-                        continue
+                for release in deviceresponse_gitea.json():
+                    for asset in release["assets"]:
+                        if not asset["name"].startswith("PixelBuilds_") and not asset[
+                            "name"
+                        ].endswith(".zip"):
+                            continue
 
-                    print(f"  adding {asset['download_count']} from Gitea")
-                    deviceDownloads += asset["download_count"]
+                        print(f"\tadding {asset['download_count']} from Gitea")
+                        deviceDownloads += asset["download_count"]
+        else:
+            print(f"Failed to get data from Gitea for {codename}!")
+            print(
+                f"Response: {deviceresponse_gitea.status_code}: {deviceresponse_gitea.text}"
+            )
+            skippeddevices.append(f"{codename} (Gitea) - no data")
+
+        print(f"{deviceDownloads} downloads in total for {codename}")
 
         try:
-            previous = downloads[codename]
+            downloads[codename]
         except KeyError:
             downloads[codename] = 0
-        finally:
-            previous = downloads[codename]
+
+        previous = downloads[codename]
 
         downloads[codename] = deviceDownloads
 
@@ -112,6 +130,8 @@ async def main():
         message += f"\n{codename}: {deviceDownloads}"
         if diff != 0:
             message += f" (+{diff})" if diff > 0 else f" ({diff})"
+
+        print("")
 
     totalDiff = totalDownloads - totalPrevious
 
@@ -140,7 +160,7 @@ async def main():
 
     # Write to JSON
     with open("downloads.json", "w") as f:
-        f.write(json.dumps(downloads, indent=2, sort_keys=True))
+        f.write(json.dumps(downloads, indent=2, sort_keys=True, default=str))
 
     # Send telegram message with results
     if TG_BOT_TOKEN and TG_CHAT_ID:

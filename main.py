@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Downloads counter for tequilaOS
+# Downloads counter for PixelBuilds
 #
 # Counts downloads for each device and sends
 # them in telegram message every day
@@ -44,10 +44,17 @@ async def main():
 
         print(f"Processing {manufacturer}/{codename}...")
 
-        deviceresponse_github = requests.get(f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases")
-        deviceresponse_gitea = requests.get(f"https://git.pixelbuilds.org/api/v1/repos/releases/{codename}/releases")
+        deviceresponse_github = requests.get(
+            f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
+        )
+        deviceresponse_gitea = requests.get(
+            f"https://git.pixelbuilds.org/api/v1/repos/releases/{codename}/releases"
+        )
 
-        if deviceresponse_github.status_code != 200 and deviceresponse_gitea.status_code != 200:
+        if (
+            deviceresponse_github.status_code != 200
+            and deviceresponse_gitea.status_code != 200
+        ):
             print(
                 f"Failed to get data for device {codename}!\n"
                 f"Github responded: {deviceresponse_github.status_code}: {deviceresponse_github.text}"
@@ -60,12 +67,14 @@ async def main():
             if len(deviceresponse_github.json()) == 0:
                 skippeddevices.append(f"{codename} - no releases on GitHub")
                 continue
-            
+
             for release in deviceresponse_github.json():
                 for asset in release["assets"]:
-                    if not asset["name"].startswith("PixelBuilds_") and not asset["name"].endswith(".zip"):
+                    if not asset["name"].startswith("PixelBuilds_") and not asset[
+                        "name"
+                    ].endswith(".zip"):
                         continue
-                    
+
                     print(f"  adding {asset['download_count']} from GitHub")
                     deviceDownloads += asset["download_count"]
 
@@ -73,12 +82,14 @@ async def main():
             if len(deviceresponse_gitea.json()) == 0:
                 skippeddevices.append(f"{codename} - no releases on Gitea")
                 continue
-            
+
             for release in deviceresponse_gitea.json():
                 for asset in release["assets"]:
-                    if not asset["name"].startswith("PixelBuilds_") and not asset["name"].endswith(".zip"):
+                    if not asset["name"].startswith("PixelBuilds_") and not asset[
+                        "name"
+                    ].endswith(".zip"):
                         continue
-                    
+
                     print(f"  adding {asset['download_count']} from Gitea")
                     deviceDownloads += asset["download_count"]
 

@@ -124,12 +124,12 @@ async def main():
 
     downloads["_total"] = totalDownloads
     downloads["_total_diff"] = totalDiff
-    
+
     print(message)
 
     # Write to JSON
     with open("downloads.json", "w") as f:
-        f.write(json.dumps(downloads, indent=4, sort_keys=True))
+        f.write(json.dumps(downloads, indent=2, sort_keys=True))
 
     # Send telegram message with results
     if TG_BOT_TOKEN and TG_CHAT_ID:

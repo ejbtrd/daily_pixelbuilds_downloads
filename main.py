@@ -44,23 +44,43 @@ async def main():
 
         print(f"Processing {manufacturer}/{codename}...")
 
-        url = f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
-        deviceresponse = requests.get(url)
+        deviceresponse_github = requests.get(f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases")
+        deviceresponse_gitea = requests.get(f"https://git.pixelbuilds.org/api/v1/repos/releases/{codename}/releases")
 
-        if deviceresponse.status_code == 404:
-            manufacturer = "redmi"
-            url = (
-                f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
-            )
-            deviceresponse = requests.get(url)
-
-        if deviceresponse.status_code != 200:
+        if deviceresponse_github.status_code != 200 and deviceresponse_gitea.status_code != 200:
             print(
-                f"Failed to get data for {codename}!\n"
-                f"{deviceresponse.status_code}: {deviceresponse.text}"
+                f"Failed to get data for device {codename}!\n"
+                f"Github responded: {deviceresponse_github.status_code}: {deviceresponse_github.text}"
+                f"Gitea responded: {deviceresponse_gitea.status_code}: {deviceresponse_gitea.text}"
             )
             skippeddevices.append(codename)
             continue
+
+        if deviceresponse_github.status_code == 200:
+            if len(deviceresponse_github.json()) == 0:
+                skippeddevices.append(f"{codename} - no releases on GitHub")
+                continue
+            
+            for release in deviceresponse_github.json():
+                for asset in release["assets"]:
+                    if not asset["name"].startswith("PixelBuilds_") and not asset["name"].endswith(".zip"):
+                        continue
+                    
+                    print(f"  adding {asset['download_count']} from GitHub")
+                    deviceDownloads += asset["download_count"]
+
+        if deviceresponse_gitea.status_code == 200:
+            if len(deviceresponse_gitea.json()) == 0:
+                skippeddevices.append(f"{codename} - no releases on Gitea")
+                continue
+            
+            for release in deviceresponse_gitea.json():
+                for asset in release["assets"]:
+                    if not asset["name"].startswith("PixelBuilds_") and not asset["name"].endswith(".zip"):
+                        continue
+                    
+                    print(f"  adding {asset['download_count']} from Gitea")
+                    deviceDownloads += asset["download_count"]
 
         try:
             previous = downloads[codename]
@@ -68,20 +88,6 @@ async def main():
             downloads[codename] = 0
         finally:
             previous = downloads[codename]
-
-        if len(deviceresponse.json()) == 0:
-            skippeddevices.append(f"{codename} - no releases")
-            continue
-
-        for release in deviceresponse.json():
-            for asset in release["assets"]:
-                if not asset["name"].startswith("PixelBuilds_") and not asset[
-                    "name"
-                ].endswith(".zip"):
-                    continue
-
-                print(f"  adding {asset['download_count']}")
-                deviceDownloads += asset["download_count"]
 
         downloads[codename] = deviceDownloads
 

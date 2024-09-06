@@ -1,3 +1,4 @@
-config.env
-/venv/
+.venv/
 .vscode/
+venv/
+config.env

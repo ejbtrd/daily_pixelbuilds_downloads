@@ -44,23 +44,47 @@ async def main():
 
         print(f"Processing {manufacturer}/{codename}...")
 
-        url = f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
-        deviceresponse = requests.get(url)
+        urlGH = f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
+        deviceresponseGH = requests.get(urlGH)
+        
+        urlGT = f"https://git.pixelbuilds.org/api/v1/repos/releases/{codename}/releases"
+        deviceresponseGT = requests.get(urlGT)
 
-        if deviceresponse.status_code == 404:
-            manufacturer = "redmi"
-            url = (
-                f"https://api.github.com/repos/PixelBuilds-Releases/{codename}/releases"
-            )
-            deviceresponse = requests.get(url)
-
-        if deviceresponse.status_code != 200:
+        if deviceresponseGH.status_code != 200 and deviceresponseGT.status_code != 200:
             print(
-                f"Failed to get data for {codename}!\n"
-                f"{deviceresponse.status_code}: {deviceresponse.text}"
+                f"Failed to get data for device {codename}!\n"
+                f"Github responded: {deviceresponseGH.status_code}: {deviceresponseGH.text}"
+                f"Gitea responded: {deviceresponseGT.status_code}: {deviceresponseGT.text}"
             )
             skippeddevices.append(codename)
             continue
+        elif deviceresponseGH.status_code != 200 and deviceresponseGT.status_code == 200:
+            if len(deviceresponseGT.json) == 0:
+                skippeddevices.append(f"{codename} - no releases")
+                continue
+            
+            for release in deviceresponseGT:
+                for asset in release["assets"]:
+                    if not asset["name"].startswith("PixelBuilds_") and not asset[
+                        "name"].endswith(".zip"):
+                        continue
+                    
+                    print(f"  adding {asset['download_count']}")
+                    deviceDownloads += asset["download_count"]
+        else:
+            if len(deviceresponseGH.json) == 0 and len(deviceresponseGT) == 0:
+                skippeddevices.append(f"{codename} - no releases")
+                continue
+            
+            for deviceresponse in [deviceresponseGH.json, deviceresponseGT.json]:
+                for release in deviceresponse:
+                    for asset in release["assets"]:
+                        if not asset["name"].startswith("PixelBuilds_") and not asset[
+                            "name"].endswith(".zip"):
+                            continue
+                        
+                        print(f"  adding {asset['download_count']}")
+                        deviceDownloads += asset["download_count"]
 
         try:
             previous = downloads[codename]
@@ -68,20 +92,6 @@ async def main():
             downloads[codename] = 0
         finally:
             previous = downloads[codename]
-
-        if len(deviceresponse.json()) == 0:
-            skippeddevices.append(f"{codename} - no releases")
-            continue
-
-        for release in deviceresponse.json():
-            for asset in release["assets"]:
-                if not asset["name"].startswith("PixelBuilds_") and not asset[
-                    "name"
-                ].endswith(".zip"):
-                    continue
-
-                print(f"  adding {asset['download_count']}")
-                deviceDownloads += asset["download_count"]
 
         downloads[codename] = deviceDownloads
 
